@@ -237,12 +237,32 @@ Verified in a worktree with Kustomize v5.6.0:
 - `python3 scripts/test_gitops_manifests.py` and
   `python3 scripts/test_check_deploy_orphans.py` pass with updated paths.
 
-Not verified here: a live `make kind-up` or `make openshift-up`. The one
-place where the scripts build a kustomization at run time (`kind/up.sh`
-writing `deploy/.db-overlay` and `deploy/.local-images`) is covered by the
-kit's explicit edit and by rendering a simulated copy of that overlay, which
-produces the same resources as on the current tree. The OpenShift driver
-computes its overlay path with `os.path.relpath` and needed no change.
+Not verified here: a live `make kind-up` or `make openshift-up`; the
+evaluation container has no container engine daemon, kind or kubectl. In its
+place a sonnet agent ran a static dry run of the whole Kind lifecycle on the
+proposed tree and found no functional defect:
+
+- `bash -n` on all 28 scripts the `kind-*`, `build-all` and `kind-env`
+  targets reach; `make -n` resolves every target to an existing executable;
+  `load_cluster_driver` with `CLUSTER_DRIVER=kind` resolves to the moved
+  implementation directory.
+- Every `deploy/`, `scripts/` and `tests/` path referenced by those scripts
+  and the Makefile exists; a whole-tree scan for the old paths finds only
+  `oc ... deploy/keycloak` resource references, which are not paths.
+- The "deploy all components" block of `up.sh` was executed verbatim against
+  a copy of each tree with a stubbed `kubectl`, for both `LOCAL_IMAGES`
+  settings; the generated wrappers now reference `../overlays/kind` and render
+  byte-identically to the current tree's (4,614 lines each), as do the Keycloak
+  sub-overlay, the Kind overlay, `base` and `base/prometheus`.
+- All 20 shell unit test files pass on the proposed tree with the same counts
+  as on `main`, and the Python policy checks pass.
+- Two cosmetic findings were fixed in the kit: two `# shellcheck source=`
+  directives that still pointed one level too high, and a README sentence that
+  called the temporary overlays git-ignored when `.gitignore` does not list
+  them (it never did; adding them is a follow-up).
+
+Still outside the evidence: cluster creation, operator installation from the
+remote URLs in `prerequisites/kind`, rollouts, DNS and port forwarding.
 
 Coordination needed before merging:
 

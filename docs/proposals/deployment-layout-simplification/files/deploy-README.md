@@ -92,8 +92,8 @@ cluster-internal registry.
 
 **Runtime-generated overlays.** `scripts/cluster/kind/up.sh` writes temporary
 kustomizations (`deploy/.local-images`, `deploy/.db-overlay`) that wrap
-`overlays/kind` with local image tags and the database Component. They are
-git-ignored and never committed.
+`overlays/kind` with local image tags and the database Component. The script
+deletes them after the apply; never commit them.
 
 ## Not in this directory
 

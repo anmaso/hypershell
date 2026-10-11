@@ -66,8 +66,12 @@ edit("scripts/cluster/kind/lib.sh", [
     ('}/../.." && pwd)"', '}/../../.." && pwd)"'),
     ("# shellcheck source=../cluster/reconcile-test-users.sh", "# shellcheck source=../reconcile-test-users.sh"),
     ('/../cluster/reconcile-test-users.sh"', '/../reconcile-test-users.sh"'),
+    ("# shellcheck source=../../OPENSHELL_VERSION", "# shellcheck source=../../../OPENSHELL_VERSION"),
 ])
-edit("scripts/cluster/kind/openshell-container.sh", [('/../.." && pwd)"', '/../../.." && pwd)"')])
+edit("scripts/cluster/kind/openshell-container.sh", [
+    ('/../.." && pwd)"', '/../../.." && pwd)"'),
+    ("# shellcheck source=../../OPENSHELL_VERSION", "# shellcheck source=../../../OPENSHELL_VERSION"),
+])
 # up.sh writes a temporary kustomization under deploy/ at run time whose relative
 # paths point at the overlay; those are not repo paths, so the rewrite below misses them.
 edit("scripts/cluster/kind/up.sh", [
