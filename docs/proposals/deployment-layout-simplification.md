@@ -152,6 +152,53 @@ Observations:
   generates at run time. Those are properties of the manifests, not of the
   layout, and are listed under "Follow-ups".
 
+### Round 5: 22 questions, 40-call budget
+
+A second question set doubled the original eleven with eleven operational
+questions (version pinning, prerequisites ownership, the admin Secret per
+environment, NetworkPolicies, Keycloak realm rendering, PR-environment CI,
+the swap dev loop, the release bundle, policy checks, PostgreSQL per
+environment, and a synthesis task: "add a new environment called gcp"). Two
+haiku and two sonnet agents ran per tree. The control tree was a clean
+worktree of `main`, so no agent could read this proposal.
+
+| Tree | Model | Tool calls | Calls to orient | Correct of 22 | Learnability | First read | Final context | Cost |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| current | haiku | 23 | 5 | 21 | 2 | none | 140K | $0.21 |
+| current | haiku | 18 | 5 | 20 | 2 | none | 116K | $0.13 |
+| current | sonnet | 21 | 7 | 21 | 3 | none | 109K | $0.99 |
+| current | sonnet | 20 | 5 | 22 | 3 | none | 110K | $0.99 |
+| proposed | haiku | 19 | 4 | 22 | 3 | deploy/README.md | 131K | $0.15 |
+| proposed | haiku | 20 | 4 | 22 | 3 | deploy/README.md | 133K | $0.18 |
+| proposed | sonnet | 17 | 2 | 22 | 4 | deploy/README.md | 95K | $0.80 |
+| proposed | sonnet | 22 | 4 | 22 | 4 | deploy/README.md | 100K | $0.87 |
+
+Cost is input-dominated and priced at first-party rates (Haiku 5.5 turns
+whose prompt exceeded 100K tokens at the higher tier); output tokens are
+under-reported by the transcripts, so sonnet runs are about $0.08 low.
+
+What the larger set showed:
+
+- The learnability gap narrows to one point (2 and 3 versus 3 and 4) because
+  the eleven new questions are about scripts, CI and policy checks, which the
+  layout change does not touch. The remaining friction is the same on both
+  trees and is listed under "Follow-ups".
+- Accuracy is high on both trees. The current tree lost points on hedged
+  answers (which Keycloak to apply by hand, which workflow deploys a PR
+  environment, where the realm JSON lives); the proposed tree lost none.
+- Orientation still differs: 2 to 4 calls on the proposed tree against 5 to 7
+  on the current one, and every proposed-tree run, haiku included, found
+  `deploy/README.md` first. The breadcrumbs added in round 4 held.
+- Sonnet was about 15 percent cheaper and ended with a 10 to 15 percent
+  smaller context on the proposed tree. Haiku was mixed: it reads more when
+  the README gives it more leads to verify.
+- On the synthesis task every run produced a sound plan. Proposed-tree runs
+  cited the "Adding a new target environment" section of
+  `scripts/cluster/README.md` and the prerequisites rule; current-tree runs
+  reasoned by copying the nearest sibling, and two noticed that the OpenShift
+  driver hard-codes its overlay path, which is a real obstacle for a new
+  environment on either tree.
+
 ## Migration
 
 `migrate.py` performs the `git mv` operations, fixes the relative paths inside
@@ -231,3 +278,24 @@ property of the current tree, not an artifact of the move.
   never existed (fixed by the migration).
 - The `openshift-dashboard-metrics` README documents itself in terms of pull
   request numbers (#251, #119) rather than the current contract.
+- `.github/component-paths.json` and `skills/RECONCILE.md` name a workflow
+  `.github/workflows/pr-environment.yml` that does not exist; the PR
+  environment is deployed from `e2e.yml` and `pr-environment-commands.yml`.
+- `scripts/test_gitops_manifests.py`, the render-equivalence guard the gitops
+  README advertises, runs only in the `checks.yml` CI job and is not part of
+  `make check`.
+- `GATEWAY-SETUP.md` creates a ClusterIssuer named `letsencrypt-dns`, while
+  the overlays and the controller expect `hypershell-ca-issuer`; the
+  relationship is not explained.
+- `skills/deploy/gcp-cluster/SKILL.md` references pre-split paths
+  (`deploy/base/controller-rbac.yaml`, `base/web-console.yaml`).
+- `scripts/cluster/drivers/openshift.sh` hard-codes `deploy/openshift` as its
+  overlay, so a new OpenShift-family environment (gcp, ibm) cannot reuse the
+  driver without parameterizing it; neither ibm nor gcp has a make target.
+- The release-bundle path list lives in `scripts/release_bundle.py` and is
+  copied into the generated `pipelines/release-bundle/pipeline.yaml`; the
+  generation step is not obvious to a reader of the pipeline file.
+- The Kind overlay header still says "base is app-only", which stopped being
+  true when `base/` regained the platform package, and
+  `overlays/openshift/keycloak` describes itself as the "single shared
+  Keycloak" while the README calls it the stage-1 render.
