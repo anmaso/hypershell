@@ -172,6 +172,8 @@ worktree of `main`, so no agent could read this proposal.
 | proposed | haiku | 20 | 4 | 22 | 3 | deploy/README.md | 133K | $0.18 |
 | proposed | sonnet | 17 | 2 | 22 | 4 | deploy/README.md | 95K | $0.80 |
 | proposed | sonnet | 22 | 4 | 22 | 4 | deploy/README.md | 100K | $0.87 |
+| current | opus | 32 | 7 | 22 | 3 | none | 122K | $2.07 |
+| proposed | opus | 32 | 3 | 22 | 4 | deploy/README.md | 101K | $1.83 |
 
 Cost is input-dominated and priced at first-party rates (Haiku 5.5 turns
 whose prompt exceeded 100K tokens at the higher tier); output tokens are
@@ -192,6 +194,17 @@ What the larger set showed:
 - Sonnet was about 15 percent cheaper and ended with a 10 to 15 percent
   smaller context on the proposed tree. Haiku was mixed: it reads more when
   the README gives it more leads to verify.
+- One Opus 5.5 run per tree (added after the round, same questions and
+  budget) landed where sonnet did on learnability (3 against 4), used the
+  most tool calls of any model (32), and was 2 to 2.5 times the cost of
+  sonnet. Its distinctive contribution was verification depth: on the
+  proposed tree it traced the Kind up script's run-time-generated overlay and
+  found that its relative paths (`../kind`) still pointed at the old location.
+  That was a real defect in the migration that the byte-identical render
+  check could not see, because that overlay only exists while `make kind-up`
+  runs. It is fixed in the kit, and the generated overlay now renders
+  identically to the current tree's. Opus on the current tree found nothing
+  the cheaper models had not.
 - On the synthesis task every run produced a sound plan. Proposed-tree runs
   cited the "Adding a new target environment" section of
   `scripts/cluster/README.md` and the prerequisites rule; current-tree runs
@@ -224,7 +237,12 @@ Verified in a worktree with Kustomize v5.6.0:
 - `python3 scripts/test_gitops_manifests.py` and
   `python3 scripts/test_check_deploy_orphans.py` pass with updated paths.
 
-Not verified here: a live `make kind-up` or `make openshift-up`.
+Not verified here: a live `make kind-up` or `make openshift-up`. The one
+place where the scripts build a kustomization at run time (`kind/up.sh`
+writing `deploy/.db-overlay` and `deploy/.local-images`) is covered by the
+kit's explicit edit and by rendering a simulated copy of that overlay, which
+produces the same resources as on the current tree. The OpenShift driver
+computes its overlay path with `os.path.relpath` and needed no change.
 
 Coordination needed before merging:
 

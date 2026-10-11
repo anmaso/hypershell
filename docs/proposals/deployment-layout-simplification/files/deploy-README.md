@@ -42,7 +42,7 @@ base  = base/platform + base/applications                       (no Keycloak, no
 
 overlays/kind      = base + overlays/kind/keycloak + Gateway, HTTPRoutes, certs, OIDC secrets
 overlays/openshift = base + base/keycloak + base/postgres.yaml + Routes, SCC, network policies
-overlays/ibm       = overlays/openshift + Route ingress mode + internal-registry images
+overlays/ibm       = overlays/openshift + Route ingress mode + internal-registry tenant gateway images
 
 gitops/platform     = base/platform + SCC            (Platform Argo CD)
 gitops/applications = base/applications + API Route  (Application Argo CD)

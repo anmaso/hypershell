@@ -68,6 +68,13 @@ edit("scripts/cluster/kind/lib.sh", [
     ('/../cluster/reconcile-test-users.sh"', '/../reconcile-test-users.sh"'),
 ])
 edit("scripts/cluster/kind/openshell-container.sh", [('/../.." && pwd)"', '/../../.." && pwd)"')])
+# up.sh writes a temporary kustomization under deploy/ at run time whose relative
+# paths point at the overlay; those are not repo paths, so the rewrite below misses them.
+edit("scripts/cluster/kind/up.sh", [
+    ("  - ../kind/database-external'", "  - ../overlays/kind/database-external'"),
+    ("  - ../kind${_db_overlay_extra}", "  - ../overlays/kind${_db_overlay_extra}"),
+    ("  - ../kind${_db_overlay_extra}", "  - ../overlays/kind${_db_overlay_extra}"),
+])
 edit("scripts/test_gitops_manifests.py", [
     ('cls.hub = render("hub")', 'cls.hub = render("gitops/hub")'),
     ('("base", "openshift", "ibm", "kind", "keycloak", "base/prometheus")',
